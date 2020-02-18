@@ -32,6 +32,15 @@ paths:
                         type: string
                       expiresAt:
                         type: string
+              examples:
+                example-token:
+                  value:
+                    accessToken:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
+                      expiresAt: '2020-02-14T17:04:35+0000'
+                    refreshToken:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
+                      expiresAt: '2020-02-14T17:04:35+0000'
       operationId: get-tokens
       description: Get JWT access and refresh tokens. This requires valid credentials specied using a basic authentication header.
       requestBody: {}
