@@ -10,7 +10,7 @@ servers: []
 paths:
   /tokens:
     get:
-      summary: Get Authorization Tokens
+      summary: API - Get Authorization Tokens
       tags: []
       responses:
         '200':
@@ -51,7 +51,7 @@ paths:
         - Basic Authentication: []
   /data_sets:
     post:
-      summary: Upload a data set
+      summary: API - Bulk Load Data
       operationId: post-data_sets
       responses:
         '200':
