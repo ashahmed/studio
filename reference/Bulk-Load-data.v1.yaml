@@ -1,0 +1,271 @@
+openapi: 3.0.0
+info:
+  title: Bulk Load data
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /tokens:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      expiresAt:
+                        type: string
+                  refreshToken:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      expiresAt:
+                        type: string
+      operationId: get-tokens
+      description: Get Authorization Tokens
+      requestBody: {}
+      security:
+        - Basic Authentication: []
+  /data_sets:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-data_sets
+      description: ''
+    post:
+      summary: ''
+      operationId: post-data_sets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+      description: Bulk load observation data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data_producer:
+                  type: object
+                  properties:
+                    identifier:
+                      type: string
+                session:
+                  type: object
+                  properties:
+                    identifier:
+                      type: string
+                    description:
+                      type: string
+                    startedAt:
+                      type: string
+                    endedAt:
+                      type: string
+                    authoredBy:
+                      type: string
+                subject:
+                  type: object
+                  properties:
+                    identifier:
+                      type: string
+                    description:
+                      type: string
+                observations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      identifier:
+                        type: string
+                        minLength: 1
+                        maxLength: 100
+                      valueDecimal:
+                        type: number
+                      valueInteger:
+                        type: integer
+                      valueString:
+                        type: string
+                      observedAt:
+                        type: string
+                        format: date-time
+                identifier:
+                  type: string
+      security:
+        - Access Tokens: []
+components:
+  schemas:
+    DataSet:
+      title: DataSet
+      type: object
+      description: A collection of observations for a given subject that was observed during a session.
+      x-examples:
+        observations-without-session:
+          identifier: First DataSet
+          data_producer:
+            identifier: VR Vive
+          subject:
+            identifier: eagle
+          observations:
+            - identifier: round1CorrectShots
+              observedAt: '2020-02-14T17:04:35+0000'
+              valueInteger: 1
+            - identifier: round1AverageTimeToDecide
+              observedAt: '2020-02-14T17:04:36+0000'
+              valueInteger: 1
+            - identifier: round1ArousalAverage
+              observedAt: '2020-02-14T17:04:37+0000'
+              valueDecimal: 4.4
+            - identifier: round1LowestArousal
+              observedAt: '2020-02-14T17:04:38+0000'
+              valueDecimal: 8.9
+            - identifier: finalScore
+              observedAt: '2020-02-14T17:04:39+0000'
+              valueDecimal: 699
+        observations-with-session:
+          identifier: First DataSet
+          data_producer:
+            identifier: VR Vive
+          subject:
+            identifier: eagle
+          session:
+            identifier: Trial One
+            startedAt: '2020-02-14T17:04:35+0000'
+            endedAt: '2020-02-14T17:10:35+0000'
+          observations:
+            - identifier: round1CorrectShots
+              observedAt: '2020-02-14T17:04:35+0000'
+              valueInteger: 1
+            - identifier: round1AverageTimeToDecide
+              observedAt: '2020-02-14T17:04:36+0000'
+              valueInteger: 1
+            - identifier: round1ArousalAverage
+              observedAt: '2020-02-14T17:04:37+0000'
+              valueDecimal: 4.4
+            - identifier: round1LowestArousal
+              observedAt: '2020-02-14T17:04:38+0000'
+              valueDecimal: 8.9
+            - identifier: finalScore
+              observedAt: '2020-02-14T17:04:39+0000'
+              valueDecimal: 699
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        data_producer:
+          type: object
+          properties:
+            identifier:
+              type: string
+        session:
+          $ref: '#/components/schemas/Session'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        observations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Observation'
+    Subject:
+      title: Subject
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+      required:
+        - identifier
+      description: The subject of data collection
+      x-examples:
+        subject-johndoe:
+          id: 64ab4faa-a733-4c8e-9a69-df9c57d8d534
+          identifier: eagle
+          description: A placeholder identifier for a non identified person.
+    Observation:
+      title: Observation
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          minLength: 1
+          maxLength: 100
+        valueInteger:
+          type: string
+        valueDecimal:
+          type: string
+        valueString:
+          type: string
+        observedAt:
+          type: string
+          format: date-time
+      required:
+        - identifier
+      x-examples:
+        trial-one-observation:
+          id: 00bcf07e-7dd4-4266-975c-f9cb9deb9761
+          identifier: round1CorrectShots
+          valueInteger: 1
+          observedAt: '2020-02-14T15:42:51Z'
+      description: The actual data observed or derived from data observed.
+    Session:
+      title: Session
+      type: object
+      x-examples:
+        example-trial-one:
+          id: 8a7f111e-b342-49eb-ba16-4b86d6bba3f5
+          identifier: Trial 1
+          startedAt: '2020-02-14T15:04:26Z'
+          endedAt: '2020-02-14T15:14:26Z'
+          authoredBy: John Doe
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        startedAt:
+          type: string
+        endedAt:
+          type: string
+        authoredBy:
+          type: string
+      required:
+        - identifier
+        - startedAt
+        - endedAt
+      description: The session within which data was collected.
+  securitySchemes:
+    Basic Authentication:
+      type: http
+      scheme: basic
+    Access Tokens:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: ''
+          refreshUrl: ''
+          scopes: {}
