@@ -7,7 +7,7 @@ servers:
 paths:
   /tokens:
     get:
-      summary: Your GET endpoint
+      summary: Get Authorization Tokens
       tags: []
       responses:
         '200':
@@ -33,19 +33,13 @@ paths:
                       expiresAt:
                         type: string
       operationId: get-tokens
-      description: Get Authorization Tokens
+      description: Get JWT access and refresh tokens. This requires valid credentials specied using a basic authentication header.
       requestBody: {}
       security:
         - Basic Authentication: []
   /data_sets:
-    get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-data_sets
-      description: ''
     post:
-      summary: ''
+      summary: Upload a data set
       operationId: post-data_sets
       responses:
         '200':
@@ -54,7 +48,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataSet'
-      description: Bulk load observation data
+              examples:
+                observations-without-session:
+                  value:
+                    id: de10dc43-764f-405d-bed5-5274bc941cb9
+                    identifier: First DataSet
+                    data_producer:
+                      identifier: VR Vive
+                    subject:
+                      id: de10dc43-764f-405d-bed5-5274bc941cb6
+                      identifier: eagle
+                    observations:
+                      - id: 1
+                        identifier: round1CorrectShots
+                        observedAt: '2020-02-14T17:04:35+0000'
+                        valueInteger: 1
+                      - id: 2
+                        identifier: round1AverageTimeToDecide
+                        observedAt: '2020-02-14T17:04:36+0000'
+                        valueInteger: 1
+                      - id: 3
+                        identifier: round1ArousalAverage
+                        observedAt: '2020-02-14T17:04:37+0000'
+                        valueDecimal: 4.4
+                      - id: 4
+                        identifier: round1LowestArousal
+                        observedAt: '2020-02-14T17:04:38+0000'
+                        valueDecimal: 8.9
+                      - id: 5
+                        identifier: finalScore
+                        observedAt: '2020-02-14T17:04:39+0000'
+                        valueDecimal: 699
+                observations with session:
+                  value:
+                    id: de10dc43-764f-405d-bed5-5274bc941cb9
+                    identifier: First DataSet
+                    data_producer:
+                      identifier: VR Vive
+                    subject:
+                      id: de10dc43-764f-405d-bed5-5274bc941cb6
+                      identifier: eagle
+                    session:
+                      id: 17a5f612-8d1d-4906-b5c1-ed9001ea1761
+                      identifier: First Trial
+                      startedAt: '2020-02-14T17:00:00+0000'
+                      endedAt: '2020-02-14T17:11:35+0000'
+                    observations:
+                      - id: 1
+                        identifier: round1CorrectShots
+                        observedAt: '2020-02-14T17:04:35+0000'
+                        valueInteger: 1
+                      - id: 2
+                        identifier: round1AverageTimeToDecide
+                        observedAt: '2020-02-14T17:04:36+0000'
+                        valueInteger: 1
+                      - id: 3
+                        identifier: round1ArousalAverage
+                        observedAt: '2020-02-14T17:04:37+0000'
+                        valueDecimal: 4.4
+                      - id: 4
+                        identifier: round1LowestArousal
+                        observedAt: '2020-02-14T17:04:38+0000'
+                        valueDecimal: 8.9
+                      - id: 5
+                        identifier: finalScore
+                        observedAt: '2020-02-14T17:04:39+0000'
+                        valueDecimal: 699
+      description: |-
+        Upload a data set. A data set is a collection of information including:
+        1) The producer that generated the data
+        2) The session withint which data was collected. This is optional.
+        3) The subject of the data collection
+        4) One or more observations collected
+
+        This is a secure api call which requires an Authorization header that includes a bearer access token. For examples of payload and response, checkout the accompanied examples.
       requestBody:
         content:
           application/json:
@@ -63,6 +130,8 @@ paths:
               properties:
                 data_producer:
                   type: object
+                  required:
+                    - identifier
                   properties:
                     identifier:
                       type: string
@@ -79,8 +148,15 @@ paths:
                       type: string
                     authoredBy:
                       type: string
+                  required:
+                    - identifier
+                    - startedAt
+                    - endedAt
+                    - authoredBy
                 subject:
                   type: object
+                  required:
+                    - identifier
                   properties:
                     identifier:
                       type: string
@@ -104,10 +180,73 @@ paths:
                       observedAt:
                         type: string
                         format: date-time
+                    required:
+                      - identifier
+                      - observedAt
                 identifier:
                   type: string
+                  minLength: 1
+                  maxLength: 100
+              required:
+                - data_producer
+                - subject
+                - observations
+                - identifier
+            examples:
+              observations-data-without-session:
+                value:
+                  identifier: First DataSet
+                  data_producer:
+                    identifier: VR Vive
+                  subject:
+                    identifier: eagle
+                  observations:
+                    - identifier: round1CorrectShots
+                      observedAt: '2020-02-14T17:04:35+0000'
+                      valueInteger: 1
+                    - identifier: round1AverageTimeToDecide
+                      observedAt: '2020-02-14T17:04:36+0000'
+                      valueInteger: 1
+                    - identifier: round1ArousalAverage
+                      observedAt: '2020-02-14T17:04:37+0000'
+                      valueDecimal: 4.4
+                    - identifier: round1LowestArousal
+                      observedAt: '2020-02-14T17:04:38+0000'
+                      valueDecimal: 8.9
+                    - identifier: finalScore
+                      observedAt: '2020-02-14T17:04:39+0000'
+                      valueDecimal: 699
+              observation-data-with-session:
+                value:
+                  identifier: First DataSet
+                  data_producer:
+                    identifier: VR Vive
+                  subject:
+                    identifier: eagle
+                  session:
+                    identifier: First Trial
+                    startedAt: '2020-02-14T17:00:00+0000'
+                    endedAt: '2020-02-14T17:11:35+0000'
+                  observations:
+                    - identifier: round1CorrectShots
+                      observedAt: '2020-02-14T17:04:35+0000'
+                      valueInteger: 1
+                    - identifier: round1AverageTimeToDecide
+                      observedAt: '2020-02-14T17:04:36+0000'
+                      valueInteger: 1
+                    - identifier: round1ArousalAverage
+                      observedAt: '2020-02-14T17:04:37+0000'
+                      valueDecimal: 4.4
+                    - identifier: round1LowestArousal
+                      observedAt: '2020-02-14T17:04:38+0000'
+                      valueDecimal: 8.9
+                    - identifier: finalScore
+                      observedAt: '2020-02-14T17:04:39+0000'
+                      valueDecimal: 699
+        description: Bulk load data
       security:
         - Access Tokens: []
+    parameters: []
 components:
   schemas:
     DataSet:
