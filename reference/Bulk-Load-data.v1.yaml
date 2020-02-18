@@ -314,13 +314,20 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         identifier:
           type: string
+          minLength: 1
+          maxLength: 100
         data_producer:
           type: object
+          required:
+            - identifier
           properties:
             identifier:
               type: string
+              minLength: 1
+              maxLength: 100
         session:
           $ref: '#/components/schemas/Session'
         subject:
@@ -329,9 +336,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Observation'
+      required:
+        - id
+        - identifier
+        - data_producer
+        - subject
+        - observations
     Subject:
       title: Subject
       type: object
+      description: The subject of data collection
+      x-examples:
+        subject-johndoe:
+          id: 64ab4faa-a733-4c8e-9a69-df9c57d8d534
+          identifier: eagle
+          description: A placeholder identifier for a non identified person.
       properties:
         id:
           type: string
@@ -343,42 +362,38 @@ components:
         description:
           type: string
       required:
+        - id
         - identifier
-      description: The subject of data collection
-      x-examples:
-        subject-johndoe:
-          id: 64ab4faa-a733-4c8e-9a69-df9c57d8d534
-          identifier: eagle
-          description: A placeholder identifier for a non identified person.
     Observation:
       title: Observation
       type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        identifier:
-          type: string
-          minLength: 1
-          maxLength: 100
-        valueInteger:
-          type: string
-        valueDecimal:
-          type: string
-        valueString:
-          type: string
-        observedAt:
-          type: string
-          format: date-time
-      required:
-        - identifier
       x-examples:
         trial-one-observation:
           id: 00bcf07e-7dd4-4266-975c-f9cb9deb9761
           identifier: round1CorrectShots
           valueInteger: 1
           observedAt: '2020-02-14T15:42:51Z'
-      description: The actual data observed or derived from data observed.
+      description: The actual data observed or derived from data observed. Exactly one of the valueX fields is required. Check examples for more information.
+      properties:
+        id:
+          type: integer
+          format: uuid
+        identifier:
+          type: string
+          minLength: 1
+          maxLength: 100
+        valueInteger:
+          type: integer
+        valueDecimal:
+          type: number
+        valueString:
+          type: string
+        observedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - identifier
     Session:
       title: Session
       type: object
@@ -389,23 +404,28 @@ components:
           startedAt: '2020-02-14T15:04:26Z'
           endedAt: '2020-02-14T15:14:26Z'
           authoredBy: John Doe
+      description: The session within which data was collected.
       properties:
         id:
           type: string
           format: uuid
         identifier:
           type: string
+          minLength: 1
+          maxLength: 100
         startedAt:
           type: string
+          format: date-time
         endedAt:
           type: string
+          format: date-time
         authoredBy:
           type: string
       required:
+        - id
         - identifier
         - startedAt
         - endedAt
-      description: The session within which data was collected.
   securitySchemes:
     Basic Authentication:
       type: http
