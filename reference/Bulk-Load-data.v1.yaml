@@ -49,7 +49,7 @@ paths:
       requestBody: {}
       security:
         - Basic Authentication: []
-  /data_sets:
+  /dataSets:
     post:
       summary: API - Bulk Load Data
       operationId: post-data_sets
