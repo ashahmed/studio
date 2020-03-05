@@ -5,7 +5,7 @@ info:
   description: |-
     This api allows to bulk load observations and related metadata such as, the session of data collection, the subject of data collection, and the producer that generated the data.
 
-    This API is protected using OAuth2 tokens. You need an OAuth2 token in order to load data through the bulk load data endpoint. To get oauth2 tokens, you need to authenticate using a username and password supplied to the Get Authorization Keys endpoint using a basic http authentication header.
+    This API is protected using OAuth2 tokens. You need an OAuth2 token in order to load data through the bulk load data endpoint. To get oauth2 tokens, you need to authenticate using a client_id and a client_secret which are supplied to the Get Authorization Keys endpoint using query parameters.
 servers: []
 paths:
   /oauth/token:
