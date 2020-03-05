@@ -495,7 +495,7 @@ paths:
     parameters: []
   /v1/stats:
     get:
-      summary: Your GET endpoint
+      summary: Count statistics endpoint
       tags: []
       responses: {}
       operationId: get-stats
