@@ -8,7 +8,7 @@ info:
     This API is protected using OAuth2 tokens. You need an OAuth2 token in order to load data through the bulk load data endpoint. To get oauth2 tokens, you need to authenticate using a username and password supplied to the Get Authorization Keys endpoint using a basic http authentication header.
 servers: []
 paths:
-  /tokens:
+  /oauth/token:
     get:
       summary: API - Get Authorization Tokens
       tags: []
@@ -44,11 +44,43 @@ paths:
                     refreshToken:
                       token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
                       expiresAt: '2020-02-14T17:04:35+0000'
+        '':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_in:
+                    type: number
+                  token_type:
+                    type: string
+                    description: ''
+              examples:
+                example-1:
+                  value:
+                    access_token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlFUazBPRGhDT0RaRk1EUTROREpFTVVNNU5VVXpSRUpHUkRGRE9ERkRRakZETlRNMk1VRkdSUSJ9.eyJpc3MiOiJodHRwczovL2tpbmR1Y3QtZ2FtZXMuYXV0aDAuY29tLyIsInN1YiI6IjYxOVdRd0lZQWRnWm9kc1l0eU1LQXpvekFuTnJnR0JwQGNsaWVudHMiLCJhdWQiOiJodHRwczovL29ic2VydmF0aW9ucy5raW5kdWN0LmNvZGVzIiwiaWF0IjoxNTgzNDExMDE5LCJleHAiOjE1ODM0OTc0MTksImF6cCI6IjYxOVdRd0lZQWRnWm9kc1l0eU1LQXpvekFuTnJnR0JwIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.ZIjP9DZvVhTisDzpe7ysL0S-mZTmXA0SPVQpSvlB4RppHgCVjO7UFw6ycHyh2rOHauJyplORnHhfkR6Lx5T4uwAPEALPDiKIzoRDOWwzlGM1jAA9wPS6Db0G4mr3mzrVxHXZ8A1m20hNNIUKpCwnaW35iPmYcY0z82wgpJNpVEKb7m3e4H0g4btk2vBVL2U7f5PBC0GeLgRrrQqgMJVlV5uVk2A20EaqGuCwbBinIg3SoZEuKcoOTunwYnSRu9b2-tmqSeUTkFku5dBhAE3aNGiMHBSnxtSZ36GxpOslJXxEn_6mxQttX-if41xFyjJYLps79WfMRYx5fnKZdThPzA
+                    expires_in: 86400
+                    token_type: Bearer
+          description: The oauth2 token used later to authorize requests to the api
       operationId: get-tokens
-      description: Get JWT access and refresh tokens. This requires valid credentials specied using a basic authentication header.
+      description: Get JWT access and refresh tokens. This requires valid credentials specied using a supplied client_id and client_secret
       requestBody: {}
-      security:
-        - Basic Authentication: []
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: client_id
+          description: The authentication client id as per oauth2 client credentials workfloww
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: client_secret
+          description: The authentication client secret as per oauth2 client credentials workflow
+          required: true
+    parameters: []
   /dataSets:
     post:
       summary: API - Bulk Load Data
@@ -140,31 +172,13 @@ paths:
             schema:
               type: object
               properties:
-                data_producer:
+                dataProducer:
                   type: object
                   required:
                     - identifier
                   properties:
                     identifier:
                       type: string
-                session:
-                  type: object
-                  properties:
-                    identifier:
-                      type: string
-                    description:
-                      type: string
-                    startedAt:
-                      type: string
-                    endedAt:
-                      type: string
-                    authoredBy:
-                      type: string
-                  required:
-                    - identifier
-                    - startedAt
-                    - endedAt
-                    - authoredBy
                 subject:
                   type: object
                   required:
@@ -194,67 +208,219 @@ paths:
                         format: date-time
                     required:
                       - identifier
-                      - observedAt
                 identifier:
                   type: string
                   minLength: 1
                   maxLength: 100
+                sessions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      identifier:
+                        type: string
+                      startedAt:
+                        type: string
+                      endedAt:
+                        type: string
+                      observations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            identifier:
+                              type: string
+                            observedAt:
+                              type: string
+                              format: date-time
+                            valueInteger:
+                              type: integer
+                            valueDecimal:
+                              type: number
+                            valueString:
+                              type: string
+                          required:
+                            - identifier
               required:
-                - data_producer
+                - dataProducer
                 - subject
                 - observations
                 - identifier
             examples:
-              observations-data-without-session:
+              example-1:
                 value:
-                  identifier: First DataSet
-                  data_producer:
+                  identifier: DataSet 1
+                  dataProducer:
                     identifier: VR Vive
                   subject:
-                    identifier: eagle
+                    identifier: Lujan Isaac
+                  sessions:
+                    - identifier: '1'
+                      startedAt: '2020-02-18T00:00:00+0000'
+                      endedAt: '2020-02-18T00:10:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:01:00+0000'
+                          valueDecimal: 2.07
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:02:00+0000'
+                          valueDecimal: 1.18
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:03:00+0000'
+                          valueDecimal: 2
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:04:00+0000'
+                          valueDecimal: 15.83
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:05:00+0000'
+                          valueInteger: 13
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:06:00+0000'
+                          valueInteger: 6
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:07:00+0000'
+                          valueInteger: 20
+                    - identifier: '2'
+                      startedAt: '2020-02-18T00:15:00+0000'
+                      endedAt: '2020-02-18T00:25:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:16:00+0000'
+                          valueDecimal: 2.07
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:17:00+0000'
+                          valueDecimal: 1.18
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:18:00+0000'
+                          valueInteger: 2
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:19:00+0000'
+                          valueDecimal: 15.83
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:20:00+0000'
+                          valueInteger: 13
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:21:00+0000'
+                          valueInteger: 6
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:22:00+0000'
+                          valueInteger: 20
+                    - identifier: '3'
+                      startedAt: '2020-02-18T00:30:00+0000'
+                      endedAt: '2020-02-18T00:40:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:31:00+0000'
+                          valueDecimal: 2.07
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:32:00+0000'
+                          valueDecimal: 1.18
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:33:00+0000'
+                          valueInteger: 2
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:34:00+0000'
+                          valueDecimal: 15.83
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:35:00+0000'
+                          valueInteger: 13
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:36:00+0000'
+                          valueInteger: 6
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:37:00+0000'
+                          valueInteger: 20
                   observations:
-                    - identifier: round1CorrectShots
-                      observedAt: '2020-02-14T17:04:35+0000'
-                      valueInteger: 1
-                    - identifier: round1AverageTimeToDecide
-                      observedAt: '2020-02-14T17:04:36+0000'
-                      valueInteger: 1
-                    - identifier: round1ArousalAverage
-                      observedAt: '2020-02-14T17:04:37+0000'
-                      valueDecimal: 4.4
-                    - identifier: round1LowestArousal
-                      observedAt: '2020-02-14T17:04:38+0000'
-                      valueDecimal: 8.9
                     - identifier: finalScore
-                      observedAt: '2020-02-14T17:04:39+0000'
-                      valueDecimal: 699
-              observation-data-with-session:
+                      observedAt: '2020-02-18T00:50:00+0000'
+                      valueDecimal: 809
+              example-2:
                 value:
-                  identifier: First DataSet
-                  data_producer:
+                  identifier: DataSet 2
+                  dataProducer:
                     identifier: VR Vive
                   subject:
-                    identifier: eagle
-                  session:
-                    identifier: First Trial
-                    startedAt: '2020-02-14T17:00:00+0000'
-                    endedAt: '2020-02-14T17:11:35+0000'
+                    identifier: Hatch Kyle
+                  sessions:
+                    - identifier: '1'
+                      startedAt: '2020-02-18T00:00:00+0000'
+                      endedAt: '2020-02-18T00:10:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:01:00+0000'
+                          valueDecimal: 2.47
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:02:00+0000'
+                          valueDecimal: 1.7
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:03:00+0000'
+                          valueDecimal: 4
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:04:00+0000'
+                          valueDecimal: 10.17
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:05:00+0000'
+                          valueDecimal: 20.25
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:06:00+0000'
+                          valueDecimal: 9.33
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:07:00+0000'
+                          valueDecimal: 14
+                    - identifier: '2'
+                      startedAt: '2020-02-18T00:00:00+0000'
+                      endedAt: '2020-02-18T00:10:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:01:00+0000'
+                          valueDecimal: 2.47
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:02:00+0000'
+                          valueDecimal: 1.7
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:03:00+0000'
+                          valueDecimal: 4
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:04:00+0000'
+                          valueDecimal: 10.17
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:05:00+0000'
+                          valueDecimal: 20.25
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:06:00+0000'
+                          valueDecimal: 9.33
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:07:00+0000'
+                          valueDecimal: 14
+                    - identifier: '3'
+                      startedAt: '2020-02-18T00:00:00+0000'
+                      endedAt: '2020-02-18T00:10:00+0000'
+                      observations:
+                        - identifier: ArousalAverage
+                          observedAt: '2020-02-18T00:01:00+0000'
+                          valueDecimal: 2.47
+                        - identifier: AverageTimeToDecide
+                          observedAt: '2020-02-18T00:02:00+0000'
+                          valueDecimal: 1.7
+                        - identifier: CorrectShots
+                          observedAt: '2020-02-18T00:03:00+0000'
+                          valueDecimal: 4
+                        - identifier: HighestArousal
+                          observedAt: '2020-02-18T00:04:00+0000'
+                          valueDecimal: 10.17
+                        - identifier: LargestArousalDelta
+                          observedAt: '2020-02-18T00:05:00+0000'
+                          valueDecimal: 20.25
+                        - identifier: LowestArousal
+                          observedAt: '2020-02-18T00:06:00+0000'
+                          valueDecimal: 9.33
+                        - identifier: WrongShots
+                          observedAt: '2020-02-18T00:07:00+0000'
+                          valueDecimal: 14
                   observations:
-                    - identifier: round1CorrectShots
-                      observedAt: '2020-02-14T17:04:35+0000'
-                      valueInteger: 1
-                    - identifier: round1AverageTimeToDecide
-                      observedAt: '2020-02-14T17:04:36+0000'
-                      valueInteger: 1
-                    - identifier: round1ArousalAverage
-                      observedAt: '2020-02-14T17:04:37+0000'
-                      valueDecimal: 4.4
-                    - identifier: round1LowestArousal
-                      observedAt: '2020-02-14T17:04:38+0000'
-                      valueDecimal: 8.9
                     - identifier: finalScore
-                      observedAt: '2020-02-14T17:04:39+0000'
-                      valueDecimal: 699
+                      observedAt: '2020-02-18T00:50:00+0000'
+                      valueDecimal: 864
         description: Bulk load data
       security:
         - Access Tokens: []
@@ -266,63 +432,142 @@ components:
       type: object
       description: A collection of observations for a given subject that was observed during a session.
       x-examples:
-        observations-without-session:
-          identifier: First DataSet
-          data_producer:
+        example-one:
+          observations:
+            - observedAt: '2020-02-18T00:50:00+0000'
+              identifier: finalScore
+              valueString: null
+              valueDecimal: 809
+              valueInteger: null
+          identifier: DataSet 1
+          dataProducer:
             identifier: VR Vive
           subject:
-            identifier: eagle
-          observations:
-            - identifier: round1CorrectShots
-              observedAt: '2020-02-14T17:04:35+0000'
-              valueInteger: 1
-            - identifier: round1AverageTimeToDecide
-              observedAt: '2020-02-14T17:04:36+0000'
-              valueInteger: 1
-            - identifier: round1ArousalAverage
-              observedAt: '2020-02-14T17:04:37+0000'
-              valueDecimal: 4.4
-            - identifier: round1LowestArousal
-              observedAt: '2020-02-14T17:04:38+0000'
-              valueDecimal: 8.9
-            - identifier: finalScore
-              observedAt: '2020-02-14T17:04:39+0000'
-              valueDecimal: 699
-        observations-with-session:
-          identifier: First DataSet
-          data_producer:
-            identifier: VR Vive
-          subject:
-            identifier: eagle
-          session:
-            identifier: Trial One
-            startedAt: '2020-02-14T17:04:35+0000'
-            endedAt: '2020-02-14T17:10:35+0000'
-          observations:
-            - identifier: round1CorrectShots
-              observedAt: '2020-02-14T17:04:35+0000'
-              valueInteger: 1
-            - identifier: round1AverageTimeToDecide
-              observedAt: '2020-02-14T17:04:36+0000'
-              valueInteger: 1
-            - identifier: round1ArousalAverage
-              observedAt: '2020-02-14T17:04:37+0000'
-              valueDecimal: 4.4
-            - identifier: round1LowestArousal
-              observedAt: '2020-02-14T17:04:38+0000'
-              valueDecimal: 8.9
-            - identifier: finalScore
-              observedAt: '2020-02-14T17:04:39+0000'
-              valueDecimal: 699
+            identifier: Lujan Isaac
+          sessions:
+            - endedAt: '2020-02-18T00:10:00+0000'
+              startedAt: '2020-02-18T00:00:00+0000'
+              identifier: '1'
+              observations:
+                - observedAt: '2020-02-18T00:01:00+0000'
+                  identifier: ArousalAverage
+                  valueString: null
+                  valueDecimal: 2.07
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:02:00+0000'
+                  identifier: AverageTimeToDecide
+                  valueString: null
+                  valueDecimal: 1.18
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:03:00+0000'
+                  identifier: CorrectShots
+                  valueString: null
+                  valueDecimal: 2
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:04:00+0000'
+                  identifier: HighestArousal
+                  valueString: null
+                  valueDecimal: 15.83
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:05:00+0000'
+                  identifier: LargestArousalDelta
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 13
+                - observedAt: '2020-02-18T00:06:00+0000'
+                  identifier: LowestArousal
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 6
+                - observedAt: '2020-02-18T00:07:00+0000'
+                  identifier: WrongShots
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 20
+            - endedAt: '2020-02-18T00:25:00+0000'
+              startedAt: '2020-02-18T00:15:00+0000'
+              identifier: '2'
+              observations:
+                - observedAt: '2020-02-18T00:16:00+0000'
+                  identifier: ArousalAverage
+                  valueString: null
+                  valueDecimal: 2.07
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:17:00+0000'
+                  identifier: AverageTimeToDecide
+                  valueString: null
+                  valueDecimal: 1.18
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:18:00+0000'
+                  identifier: CorrectShots
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 2
+                - observedAt: '2020-02-18T00:19:00+0000'
+                  identifier: HighestArousal
+                  valueString: null
+                  valueDecimal: 15.83
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:20:00+0000'
+                  identifier: LargestArousalDelta
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 13
+                - observedAt: '2020-02-18T00:21:00+0000'
+                  identifier: LowestArousal
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 6
+                - observedAt: '2020-02-18T00:22:00+0000'
+                  identifier: WrongShots
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 20
+            - endedAt: '2020-02-18T00:40:00+0000'
+              startedAt: '2020-02-18T00:30:00+0000'
+              identifier: '3'
+              observations:
+                - observedAt: '2020-02-18T00:31:00+0000'
+                  identifier: ArousalAverage
+                  valueString: null
+                  valueDecimal: 2.07
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:32:00+0000'
+                  identifier: AverageTimeToDecide
+                  valueString: null
+                  valueDecimal: 1.18
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:33:00+0000'
+                  identifier: CorrectShots
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 2
+                - observedAt: '2020-02-18T00:34:00+0000'
+                  identifier: HighestArousal
+                  valueString: null
+                  valueDecimal: 15.83
+                  valueInteger: null
+                - observedAt: '2020-02-18T00:35:00+0000'
+                  identifier: LargestArousalDelta
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 13
+                - observedAt: '2020-02-18T00:36:00+0000'
+                  identifier: LowestArousal
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 6
+                - observedAt: '2020-02-18T00:37:00+0000'
+                  identifier: WrongShots
+                  valueString: null
+                  valueDecimal: null
+                  valueInteger: 20
       properties:
-        id:
-          type: string
-          format: uuid
         identifier:
           type: string
           minLength: 1
           maxLength: 100
-        data_producer:
+        dataProducer:
           type: object
           required:
             - identifier
@@ -331,18 +576,19 @@ components:
               type: string
               minLength: 1
               maxLength: 100
-        session:
-          $ref: '#/components/schemas/Session'
         subject:
           $ref: '#/components/schemas/Subject'
         observations:
           type: array
           items:
             $ref: '#/components/schemas/Observation'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
       required:
-        - id
         - identifier
-        - data_producer
+        - dataProducer
         - subject
         - observations
     Subject:
@@ -351,13 +597,8 @@ components:
       description: The subject of data collection
       x-examples:
         subject-johndoe:
-          id: 64ab4faa-a733-4c8e-9a69-df9c57d8d534
           identifier: eagle
-          description: A placeholder identifier for a non identified person.
       properties:
-        id:
-          type: string
-          format: uuid
         identifier:
           type: string
           minLength: 1
@@ -365,22 +606,25 @@ components:
         description:
           type: string
       required:
-        - id
         - identifier
     Observation:
       title: Observation
       type: object
       x-examples:
-        trial-one-observation:
-          id: 00bcf07e-7dd4-4266-975c-f9cb9deb9761
-          identifier: round1CorrectShots
-          valueInteger: 1
-          observedAt: '2020-02-14T15:42:51Z'
+        example-1:
+          observedAt: '2020-02-18T00:18:00+0000'
+          identifier: CorrectShots
+          valueString: null
+          valueDecimal: null
+          valueInteger: 2
+        example-2:
+          observedAt: '2020-02-18T00:17:00+0000'
+          identifier: AverageTimeToDecide
+          valueString: null
+          valueDecimal: 1.18
+          valueInteger: null
       description: The actual data observed or derived from data observed. Exactly one of the valueX fields is required. Check examples for more information.
       properties:
-        id:
-          type: integer
-          format: uuid
         identifier:
           type: string
           minLength: 1
@@ -395,23 +639,79 @@ components:
           type: string
           format: date-time
       required:
-        - id
         - identifier
     Session:
       title: Session
       type: object
       x-examples:
         example-trial-one:
-          id: 8a7f111e-b342-49eb-ba16-4b86d6bba3f5
-          identifier: Trial 1
-          startedAt: '2020-02-14T15:04:26Z'
-          endedAt: '2020-02-14T15:14:26Z'
-          authoredBy: John Doe
+          identifier: '1'
+          startedAt: '2020-02-18T00:00:00+0000'
+          endedAt: '2020-02-18T00:10:00+0000'
+          observations:
+            - identifier: ArousalAverage
+              observedAt: '2020-02-18T00:01:00+0000'
+              valueDecimal: 2.47
+            - identifier: AverageTimeToDecide
+              observedAt: '2020-02-18T00:02:00+0000'
+              valueDecimal: 1.7
+            - identifier: CorrectShots
+              observedAt: '2020-02-18T00:03:00+0000'
+              valueDecimal: 4
+            - identifier: HighestArousal
+              observedAt: '2020-02-18T00:04:00+0000'
+              valueDecimal: 10.17
+            - identifier: LargestArousalDelta
+              observedAt: '2020-02-18T00:05:00+0000'
+              valueDecimal: 20.25
+            - identifier: LowestArousal
+              observedAt: '2020-02-18T00:06:00+0000'
+              valueDecimal: 9.33
+            - identifier: WrongShots
+              observedAt: '2020-02-18T00:07:00+0000'
+              valueDecimal: 14
+        example-trial-two:
+          endedAt: '2020-02-18T00:25:00+0000'
+          startedAt: '2020-02-18T00:15:00+0000'
+          identifier: '2'
+          observations:
+            - observedAt: '2020-02-18T00:16:00+0000'
+              identifier: ArousalAverage
+              valueString: null
+              valueDecimal: 2.07
+              valueInteger: null
+            - observedAt: '2020-02-18T00:17:00+0000'
+              identifier: AverageTimeToDecide
+              valueString: null
+              valueDecimal: 1.18
+              valueInteger: null
+            - observedAt: '2020-02-18T00:18:00+0000'
+              identifier: CorrectShots
+              valueString: null
+              valueDecimal: null
+              valueInteger: 2
+            - observedAt: '2020-02-18T00:19:00+0000'
+              identifier: HighestArousal
+              valueString: null
+              valueDecimal: 15.83
+              valueInteger: null
+            - observedAt: '2020-02-18T00:20:00+0000'
+              identifier: LargestArousalDelta
+              valueString: null
+              valueDecimal: null
+              valueInteger: 13
+            - observedAt: '2020-02-18T00:21:00+0000'
+              identifier: LowestArousal
+              valueString: null
+              valueDecimal: null
+              valueInteger: 6
+            - observedAt: '2020-02-18T00:22:00+0000'
+              identifier: WrongShots
+              valueString: null
+              valueDecimal: null
+              valueInteger: 20
       description: The session within which data was collected.
       properties:
-        id:
-          type: string
-          format: uuid
         identifier:
           type: string
           minLength: 1
@@ -422,10 +722,11 @@ components:
         endedAt:
           type: string
           format: date-time
-        authoredBy:
-          type: string
+        observations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Observation'
       required:
-        - id
         - identifier
         - startedAt
         - endedAt
