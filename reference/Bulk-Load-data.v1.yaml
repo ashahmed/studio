@@ -6,7 +6,9 @@ info:
     This api allows to bulk load observations and related metadata such as, the session of data collection, the subject of data collection, and the producer that generated the data.
 
     This API is protected using OAuth2 tokens. You need an OAuth2 token in order to load data through the bulk load data endpoint. To get oauth2 tokens, you need to authenticate using a client_id and a client_secret which are supplied to the Get Authorization Keys endpoint using query parameters.
-servers: []
+servers:
+  - url: 'https://bah.kinduct.network'
+    description: Sandbox
 paths:
   /oauth/token:
     get:
@@ -81,7 +83,7 @@ paths:
           description: The authentication client secret as per oauth2 client credentials workflow
           required: true
     parameters: []
-  /dataSets:
+  /v1/dataSets:
     post:
       summary: API - Bulk Load Data
       operationId: post-data_sets
@@ -490,6 +492,38 @@ paths:
         description: Bulk load data
       security:
         - Access TokensBasic Authentication: []
+    parameters: []
+  /v1/stats:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-stats
+      description: Retrieve counts for data stored in the api
+      security:
+        - Access TokensBasic Authentication: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observationsCount:
+                  type: number
+                sessionsCount:
+                  type: number
+                subjectsCount:
+                  type: number
+                dataSetsCounts:
+                  type: number
+            examples:
+              example-1:
+                value:
+                  sessionsCount: 10
+                  dataSetsCount: 4
+                  observationsCount: 62
+                  subjectsCount: 3
+        description: ''
     parameters: []
 components:
   schemas:
