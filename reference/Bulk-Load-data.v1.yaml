@@ -7,8 +7,8 @@ info:
 
     This API is protected using OAuth2 tokens. You need an OAuth2 token in order to load data through the bulk load data endpoint. To get oauth2 tokens, you need to authenticate using a client_id and a client_secret which are supplied to the Get Authorization Keys endpoint using query parameters.
 servers:
-  - url: 'https://bah.kinduct.network'
-    description: Sandbox
+  - url: 'https://api-bah.kinduct.com'
+    description: Production
 paths:
   /oauth/token:
     get:
